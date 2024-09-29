@@ -1,17 +1,44 @@
 import asyncio
 import logging
-from typing import Callable, Awaitable, Any, Mapping
+from dataclasses import dataclass, field
+from typing import Callable, Awaitable, Any, Mapping, Literal
 
 from aiohttp import ClientSession, BasicAuth, ClientTimeout, TCPConnector
 from aiohttp.typedefs import StrOrURL, LooseCookies, LooseHeaders
 from aiojobs import Scheduler
 
-from .config.models import SessionConfig
+from .config import SessionConfig
 from .exceptions import RequestException, HTTPException
-from .models import Request
-from .models.request import HttpMethod, PrioritizedRequest
+from .utils import get_cb_kwargs
 
 logger = logging.getLogger(__name__)
+
+
+HttpMethod = Literal["GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"]
+
+
+@dataclass(slots=True)
+class Request:
+    url: StrOrURL
+    method: HttpMethod
+    callback: Callable[..., Awaitable] | None = None
+    cb_kwargs: Mapping[str, Any] | None = None
+    errback: Callable[..., Awaitable] | None = None
+    params: Mapping[str, str | int] | str | None = None
+    data: Any = None
+    json: Any = None
+    cookies: LooseCookies | None = None
+    headers: LooseHeaders | None = None
+    proxy: StrOrURL | None = None
+    proxy_auth: BasicAuth | None = None
+    timeout: ClientTimeout | None = None
+    proxy_headers: LooseHeaders | None = None
+
+
+@dataclass(slots=True, order=True)
+class PrioritizedRequest:
+    priority: int
+    request: Request | None = field(compare=False)
 
 
 class Session:
@@ -47,28 +74,29 @@ class Session:
                     output_exc = HTTPException(
                         status_code=response.status,
                         message=await response.text(),
-                        request=request,
                         request_info=response.request_info,
                     )
-                    if request.errback is not None:
-                        await request.errback(output_exc, **(request.cb_kwargs or {}))
-                    else:
+                    if request.errback is None:
                         raise output_exc
-                elif request.callback is not None:
-                    await request.callback(response, **(request.cb_kwargs or {}))
 
+                    await request.errback(output_exc, **get_cb_kwargs(request.errback, request.cb_kwargs))
+                elif request.callback is not None:
+                    await request.callback(response, **get_cb_kwargs(request.callback, request.cb_kwargs))
         except Exception as exc:
-            output_exc = RequestException(exc, request)
-            if request.errback is not None:
-                await request.errback(output_exc, **(request.cb_kwargs or {}))
-            else:
+            output_exc = RequestException(exc, request.url, request.method)
+            if request.errback is None:
                 raise output_exc
 
-    async def listen_queue(self):
-        while True:
-            await self._scheduler.spawn(self._request((await self._queue.get()).request))
+            await request.errback(output_exc, **get_cb_kwargs(request.errback, request.cb_kwargs))
+
+    async def start(self):
+        while (request := (await self._queue.get()).request) is not None:
+            await self._scheduler.spawn(self._request(request))
             if self._config.request_delay > 0:
                 await asyncio.sleep(self._config.request_delay)
+
+    async def shutdown(self):
+        await self._queue.put(PrioritizedRequest(priority=-999, request=None))
 
     async def close(self) -> None:
         await self._client.close()

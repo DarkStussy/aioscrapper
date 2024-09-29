@@ -5,8 +5,6 @@ from .session import SendRequest
 
 class BaseScrapper(ABC):
     @abstractmethod
-    async def start(self, send_request: SendRequest) -> None:
-        pass
+    async def start(self, send_request: SendRequest) -> None: ...
 
-    async def close(self):
-        pass
+    async def close(self) -> None: ...

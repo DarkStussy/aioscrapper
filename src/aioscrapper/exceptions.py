@@ -1,6 +1,5 @@
 from aiohttp import RequestInfo
-
-from .models import Request
+from aiohttp.typedefs import StrOrURL
 
 
 class ClientException(Exception):
@@ -8,10 +7,9 @@ class ClientException(Exception):
 
 
 class HTTPException(ClientException):
-    def __init__(self, status_code: int, message: str | dict, request: Request, request_info: RequestInfo):
+    def __init__(self, status_code: int, message: str, request_info: RequestInfo):
         self.status_code = status_code
         self.message = message
-        self.request = request
         self.request_info = request_info
 
     def __str__(self):
@@ -19,12 +17,10 @@ class HTTPException(ClientException):
 
 
 class RequestException(ClientException):
-    def __init__(self, inner_exception: Exception, request: Request):
-        self.inner_exception = inner_exception
-        self.request = request
+    def __init__(self, inner_exc: Exception, url: StrOrURL, method: str):
+        self.inner_exc = inner_exc
+        self.url = url
+        self.method = method
 
     def __str__(self):
-        return (
-            f"[{self.inner_exception.__class__.__name__}] {self.request.method}: {self.request.url}: "
-            f"{self.inner_exception}"
-        )
+        return f"[{self.inner_exc.__class__.__name__}]: {self.method} {self.url}: {self.inner_exc}"
