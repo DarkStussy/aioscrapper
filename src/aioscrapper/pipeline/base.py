@@ -4,15 +4,15 @@ from typing import TypeVar, Generic, Protocol
 
 class BaseItem(Protocol):
     @property
-    def pipeline(self) -> str: ...
+    def pipeline_name(self) -> str: ...
 
 
-Item = TypeVar("Item", bound=BaseItem)
+PipelineItem = TypeVar("PipelineItem", bound=BaseItem)
 
 
-class BasePipeline(Generic[Item]):
+class BasePipeline(Generic[PipelineItem]):
     @abstractmethod
-    async def put_item(self, item: Item) -> None: ...
+    async def put_item(self, item: PipelineItem) -> None: ...
 
     async def initialize(self) -> None: ...
 

@@ -12,7 +12,7 @@ class Pipeline:
     async def put_item(self, item: BaseItem) -> None:
         self._logger.debug(f"pipeline item received: {item}")
         try:
-            pipelines = self._pipelines[item.pipeline]
+            pipelines = self._pipelines[item.pipeline_name]
         except KeyError:
             raise RuntimeError(f"Pipelines for item {item} not found")
 
