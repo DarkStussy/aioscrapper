@@ -6,7 +6,7 @@ from ..types import Response, Request
 
 
 class AiohttpSession(BaseSession):
-    def __init__(self, timeout: float | None = None, ssl: bool | None = None):
+    def __init__(self, timeout: float | None = None, ssl: bool | None = None) -> None:
         super().__init__(timeout, ssl)
         self._session = ClientSession(
             timeout=ClientTimeout(total=timeout),

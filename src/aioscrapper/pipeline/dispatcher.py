@@ -5,7 +5,7 @@ from .base import BasePipeline, BaseItem
 
 
 class Pipeline:
-    def __init__(self, logger: Logger, pipelines: dict[str, list[BasePipeline]] | None = None):
+    def __init__(self, logger: Logger, pipelines: dict[str, list[BasePipeline]] | None = None) -> None:
         self._logger = logger
         self._pipelines = pipelines or {}
 
@@ -24,10 +24,10 @@ class Pipeline:
             for pipeline in pipelines:
                 yield pipeline
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         for pipeline in self._get_pipelines():
             await pipeline.initialize()
 
-    async def close(self):
+    async def close(self) -> None:
         for pipeline in self._get_pipelines():
             await pipeline.close()

@@ -82,7 +82,7 @@ class RequestWorker:
     def listen_queue(self) -> None:
         self._task = asyncio.create_task(self._listen_queue())
 
-    async def _listen_queue(self):
+    async def _listen_queue(self) -> None:
         while (r := (await self._queue.get())) is not None:
             for outer_middleware in self._request_outer_middlewares:
                 await outer_middleware(r.request, r.request_params)

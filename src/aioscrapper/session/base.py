@@ -5,7 +5,7 @@ from ..types import Request, Response
 
 
 class BaseSession(abc.ABC):
-    def __init__(self, timeout: float | None = None, ssl: bool | None = None):
+    def __init__(self, timeout: float | None = None, ssl: bool | None = None) -> None:
         self._timeout = timeout
         self._ssl = ssl
 

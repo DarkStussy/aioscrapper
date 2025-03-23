@@ -24,7 +24,7 @@ class AIOScrapper:
         response_middlewares: list[ResponseMiddleware] | None = None,
         config: Config | None = None,
         logger: Logger | None = None,
-    ):
+    ) -> None:
         self._scrappers = scrappers
 
         self._logger = logger or getLogger("aioscrapper")

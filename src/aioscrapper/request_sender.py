@@ -5,7 +5,7 @@ from .types import QueryParams, Cookies, Headers, BasicAuth, Request, RequestPar
 
 
 class RequestSender:
-    def __init__(self, queue: RequestQueue):
+    def __init__(self, queue: RequestQueue) -> None:
         self._queue = queue
 
     async def __call__(

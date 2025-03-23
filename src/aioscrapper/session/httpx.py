@@ -5,7 +5,7 @@ from ..types import Request, Response
 
 
 class HttpxSession(BaseSession):
-    def __init__(self, timeout: float | None = None, ssl: bool | None = None):
+    def __init__(self, timeout: float | None = None, ssl: bool | None = None) -> None:
         super().__init__(timeout, ssl)
         self._session = AsyncClient(timeout=timeout, verify=ssl if ssl is not None else True)
 
